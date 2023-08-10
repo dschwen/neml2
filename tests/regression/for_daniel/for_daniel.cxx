@@ -38,6 +38,8 @@ TEST_CASE("Test Daniel's model")
   auto result = driver.result();
   auto strain = result["input"]->named_buffers()["forces/E"];
   auto stress = result["output"]->named_buffers()["state/S"];
-  std::cout << strain.index({torch::indexing::Slice(), 0, 0}) << std::endl;
-  std::cout << stress.index({torch::indexing::Slice(), 0, 0}) << std::endl;
+  std::cout << torch::stack({strain.index({torch::indexing::Slice(), 0, 0}),
+                             stress.index({torch::indexing::Slice(), 0, 0})})
+                   .transpose(0, 1)
+            << std::endl;
 }

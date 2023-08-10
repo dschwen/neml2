@@ -28,6 +28,17 @@
 
 namespace neml2
 {
+class DNN : public torch::nn::Module
+{
+public:
+  DNN();
+
+  torch::Tensor forward(torch::Tensor x);
+
+private:
+  torch::nn::Linear _layer1, _layer2;
+};
+
 class DanielFlowRate : public Model
 {
 public:
@@ -46,6 +57,8 @@ protected:
                          LabeledMatrix * dout_din = nullptr,
                          LabeledTensor3D * d2out_din2 = nullptr) const override;
 
-  Scalar _p1, _p2, _p3;
+  Scalar _p1, _p2, _p3, _p4;
+
+  std::shared_ptr<DNN> _surrogate;
 };
 } // namespace neml2

@@ -26,6 +26,20 @@
 
 namespace neml2
 {
+DNN::DNN()
+  : _layer1(register_module("layer1", torch::nn::Linear(7, 20))),
+    _layer2(register_module("layer2", torch::nn::Linear(20, 1)))
+{
+}
+
+torch::Tensor
+DNN::forward(torch::Tensor x)
+{
+  x = torch::relu(_layer1->forward(x));
+  x = _layer2->forward(x);
+  return x;
+}
+
 register_NEML2_object(DanielFlowRate);
 
 ParameterSet
@@ -39,6 +53,8 @@ DanielFlowRate::expected_params()
   params.set<LabeledAxisAccessor>("mandel_stress") = {{"state", "internal", "M"}};
   params.set<LabeledAxisAccessor>("flow_rate") = {{"state", "internal", "gamma_rate"}};
   params.set<LabeledAxisAccessor>("temperature") = {{"forces", "T"}};
+  params.set<bool>("use_AD_first_derivative") = true;
+  params.set<bool>("use_AD_second_derivative") = true;
   return params;
 }
 
@@ -49,9 +65,17 @@ DanielFlowRate::DanielFlowRate(const ParameterSet & params)
     temperature(declare_input_variable<Scalar>(params.get<LabeledAxisAccessor>("temperature"))),
     _p1(register_crossref_model_parameter<Scalar>("p1", "parameter_1")),
     _p2(register_crossref_model_parameter<Scalar>("p2", "parameter_2")),
-    _p3(register_crossref_model_parameter<Scalar>("p3", "parameter_3"))
+    _p3(register_crossref_model_parameter<Scalar>("p3", "parameter_3")),
+    _p4(register_crossref_model_parameter<Scalar>("p4", "parameter_4")),
+    _surrogate(register_module("surrogate", std::make_shared<DNN>()))
 {
   setup();
+
+  // 1. We don't need the parameter gradients
+  // 2. We need the parameters to have the same options as ours
+  for (auto param : _surrogate->parameters(/*recursive=*/true))
+    param.requires_grad_(false);
+  _surrogate->to(TORCH_DTYPE);
 }
 
 void
@@ -61,7 +85,7 @@ DanielFlowRate::set_value(const LabeledVector & in,
                           LabeledTensor3D * d2out_din2) const
 {
   neml_assert_dbg(!d2out_din2, "I am too lazy to implement second derivatives");
-  const auto options = in.options();
+  neml_assert_dbg(!dout_din, "Try AD");
 
   // Grab the mandel stress and temperature
   auto M = in.get<SymR2>(mandel_stress);
@@ -71,26 +95,21 @@ DanielFlowRate::set_value(const LabeledVector & in,
   auto eta = _p2 * T;
 
   // Compute Daniel's flow rate
+  // Firstly, the traditional bits
   auto S = M.dev();
   Scalar vm = std::sqrt(3.0 / 2.0) * S.norm(EPS);
   auto f = vm - _p1;
   Scalar Hf = math::heaviside(f);
   Scalar f_abs = torch::abs(f);
   Scalar gamma_dot_m = torch::pow(f_abs / eta, _p3);
-  Scalar gamma_dot = gamma_dot_m * Hf;
+  Scalar gamma_dot_1 = gamma_dot_m * Hf;
+  // Secondly, let's add the "neural flow rate"
+  auto x = torch::cat({M, T}, -1);
+  Scalar gamma_dot_2 = _surrogate->forward(x);
+  // Let's add them together
+  auto gamma_dot = gamma_dot_1 + _p4 * gamma_dot_2;
 
   if (out)
     out->set(gamma_dot, flow_rate);
-
-  if (dout_din)
-  {
-    // Derivative of Daniel's flow rate
-    auto dgamma_dot_df = _p3 / f_abs * gamma_dot;
-    auto df_dvm = Scalar::identity_map(options);
-    auto dvm_dM = 3.0 / 2.0 * S / vm;
-    auto dgamma_dot_dM = dgamma_dot_df * df_dvm * dvm_dM;
-    dout_din->set(dgamma_dot_dM, flow_rate, mandel_stress);
-    dout_din->set(-gamma_dot * _p3 / eta * _p2, flow_rate, temperature);
-  }
 }
 } // namespace neml2

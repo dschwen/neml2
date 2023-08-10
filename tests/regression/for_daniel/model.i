@@ -69,6 +69,7 @@
     parameter_1 = 100
     parameter_2 = 0.1
     parameter_3 = 2
+    parameter_4 = 1
   []
   [flow_direction]
     type = J2FlowDirection

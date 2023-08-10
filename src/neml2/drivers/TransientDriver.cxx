@@ -96,9 +96,6 @@ TransientDriver::run()
 bool
 TransientDriver::solve()
 {
-  // We don't need parameter gradients
-  torch::NoGradGuard no_grad_guard;
-
   for (_step_count = 0; _step_count < _nsteps; _step_count++)
   {
     if (_verbose)
