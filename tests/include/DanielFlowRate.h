@@ -36,7 +36,7 @@ public:
   torch::Tensor forward(torch::Tensor x);
 
 private:
-  torch::nn::Linear _layer1, _layer2;
+  torch::Tensor _x_mean, _x_std, _y_mean, _y_std;
 };
 
 class DanielFlowRate : public Model
@@ -48,7 +48,10 @@ public:
 
   const LabeledAxisAccessor mandel_stress;
   const LabeledAxisAccessor flow_rate;
+
   const LabeledAxisAccessor temperature;
+  const LabeledAxisAccessor grain_size;
+  const LabeledAxisAccessor stoichiometry;
 
 protected:
   /// The flow rate
@@ -56,8 +59,6 @@ protected:
                          LabeledVector * out,
                          LabeledMatrix * dout_din = nullptr,
                          LabeledTensor3D * d2out_din2 = nullptr) const override;
-
-  Scalar _p1, _p2, _p3, _p4;
 
   std::shared_ptr<DNN> _surrogate;
 };

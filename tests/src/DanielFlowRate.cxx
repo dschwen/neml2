@@ -26,18 +26,28 @@
 
 namespace neml2
 {
-DNN::DNN()
-  : _layer1(register_module("layer1", torch::nn::Linear(7, 20))),
-    _layer2(register_module("layer2", torch::nn::Linear(20, 1)))
+DNN::DNN(const std::string & filename)
+  : _x_mean(torch::cat({1.8501e+03, 4.9885e-05, 4.9936e+07, 2.0289e-03}, -1)),
+    _x_std(torch::cat({2.0555e+02, 2.8894e-05, 2.8824e+07, 2.7551e-03}, -1)),
+    _y_mean(torch::cat({-14.4908}, -1)),
+    _y_std(torch::cat({5.2951}, -1))
 {
+  try
+  {
+    torch::jit::script::Module * base = this;
+    *base = torch::jit::load(filename);
+  }
+  catch (const c10::Error & e)
+  {
+    mooseError("Error while loading torchscript file ", filename, "!\n", e.msg());
+  }
 }
 
 torch::Tensor
 DNN::forward(torch::Tensor x)
 {
-  x = torch::relu(_layer1->forward(x));
-  x = _layer2->forward(x);
-  return x;
+  std::vector<torch::jit::IValue> inputs(1, (x - _x_mean) / _x_std);
+  return torch::jit::script::Module::forward(inputs).toTensor() * _y_std + _y_mean;
 }
 
 register_NEML2_object(DanielFlowRate);
@@ -46,13 +56,11 @@ ParameterSet
 DanielFlowRate::expected_params()
 {
   ParameterSet params = Model::expected_params();
-  params.set<CrossRef<Scalar>>("parameter_1");
-  params.set<CrossRef<Scalar>>("parameter_2");
-  params.set<CrossRef<Scalar>>("parameter_3");
-  params.set<CrossRef<Scalar>>("parameter_4");
   params.set<LabeledAxisAccessor>("mandel_stress") = {{"state", "internal", "M"}};
   params.set<LabeledAxisAccessor>("flow_rate") = {{"state", "internal", "gamma_rate"}};
   params.set<LabeledAxisAccessor>("temperature") = {{"forces", "T"}};
+  params.set<LabeledAxisAccessor>("grain_size") = {{"forces", "grain_size"}};
+  params.set<LabeledAxisAccessor>("stoichiometry") = {{"forces", "stoichiometry"}};
   params.set<bool>("use_AD_first_derivative") = true;
   params.set<bool>("use_AD_second_derivative") = true;
   return params;
@@ -63,11 +71,9 @@ DanielFlowRate::DanielFlowRate(const ParameterSet & params)
     mandel_stress(declare_input_variable<SymR2>(params.get<LabeledAxisAccessor>("mandel_stress"))),
     flow_rate(declare_output_variable<Scalar>(params.get<LabeledAxisAccessor>("flow_rate"))),
     temperature(declare_input_variable<Scalar>(params.get<LabeledAxisAccessor>("temperature"))),
-    _p1(register_crossref_model_parameter<Scalar>("p1", "parameter_1")),
-    _p2(register_crossref_model_parameter<Scalar>("p2", "parameter_2")),
-    _p3(register_crossref_model_parameter<Scalar>("p3", "parameter_3")),
-    _p4(register_crossref_model_parameter<Scalar>("p4", "parameter_4")),
-    _surrogate(register_module("surrogate", std::make_shared<DNN>()))
+    grain_size(declare_input_variable<Scalar>(params.get<LabeledAxisAccessor>("grain_size"))),
+    stoichiometry(declare_input_variable<Scalar>(params.get<LabeledAxisAccessor>("stoichiometry"))),
+    _surrogate(register_module("surrogate", std::make_shared<DNN>("/tmp/creep_model.pt")))
 {
   setup();
 
@@ -89,25 +95,14 @@ DanielFlowRate::set_value(const LabeledVector & in,
 
   // Grab the mandel stress and temperature
   auto M = in.get<SymR2>(mandel_stress);
+  auto S = M.dev();
   auto T = in.get<Scalar>(temperature);
-
-  // Let's say the flow resistance increases as temperature increases
-  auto eta = _p2 * T;
+  auto G = in.get<Scalar>(grain_size);
+  auto ST = in.get<Scalar>(stoichiometry);
 
   // Compute Daniel's flow rate
-  // Firstly, the traditional bits
-  auto S = M.dev();
-  Scalar vm = std::sqrt(3.0 / 2.0) * S.norm(EPS);
-  auto f = vm - _p1;
-  Scalar Hf = math::heaviside(f);
-  Scalar f_abs = torch::abs(f);
-  Scalar gamma_dot_m = torch::pow(f_abs / eta, _p3);
-  Scalar gamma_dot_1 = gamma_dot_m * Hf;
-  // Secondly, let's add the "neural flow rate"
-  auto x = torch::cat({M, T}, -1);
-  Scalar gamma_dot_2 = _surrogate->forward(x);
-  // Let's add them together
-  auto gamma_dot = gamma_dot_1 + _p4 * gamma_dot_2;
+  auto x = torch::cat({T, G, S, ST}, -1);
+  Scalar gamma_dot = _surrogate->forward(x);
 
   if (out)
     out->set(gamma_dot, flow_rate);
