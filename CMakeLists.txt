@@ -23,6 +23,8 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 # Add the unity option to the cache
 option(CMAKE_UNITY_BUILD "Use a unity build" OFF)
 
+LINK_DIRECTORIES(/opt/intel/oneapi/mkl/latest/lib/intel64/)
+
 # Enable testing
 enable_testing()
 

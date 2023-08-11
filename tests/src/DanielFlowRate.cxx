@@ -27,20 +27,13 @@
 namespace neml2
 {
 DNN::DNN(const std::string & filename)
-  : _x_mean(torch::cat({1.8501e+03, 4.9885e-05, 4.9936e+07, 2.0289e-03}, -1)),
-    _x_std(torch::cat({2.0555e+02, 2.8894e-05, 2.8824e+07, 2.7551e-03}, -1)),
-    _y_mean(torch::cat({-14.4908}, -1)),
-    _y_std(torch::cat({5.2951}, -1))
+  : _x_mean(torch::tensor({1.8501e+03, 4.9885e-05, 4.9936e+07, 2.0289e-03}, {torch::kFloat64})),
+    _x_std(torch::tensor({2.0555e+02, 2.8894e-05, 2.8824e+07, 2.7551e-03}, {torch::kFloat64})),
+    _y_mean(torch::tensor({-14.4908}, {torch::kFloat64})),
+    _y_std(torch::tensor({5.2951}, {torch::kFloat64}))
 {
-  try
-  {
-    torch::jit::script::Module * base = this;
-    *base = torch::jit::load(filename);
-  }
-  catch (const c10::Error & e)
-  {
-    mooseError("Error while loading torchscript file ", filename, "!\n", e.msg());
-  }
+  torch::jit::script::Module * base = this;
+  *base = torch::jit::load(filename);
 }
 
 torch::Tensor

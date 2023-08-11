@@ -25,13 +25,14 @@
 #pragma once
 
 #include "neml2/models/Model.h"
+#include <torch/script.h>
 
 namespace neml2
 {
-class DNN : public torch::nn::Module
+class DNN : public torch::jit::script::Module
 {
 public:
-  DNN();
+  DNN(const std::string & filename);
 
   torch::Tensor forward(torch::Tensor x);
 
