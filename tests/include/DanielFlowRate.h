@@ -26,6 +26,7 @@
 
 #include "neml2/models/Model.h"
 #include <torch/script.h>
+#include <memory>
 
 namespace neml2
 {
@@ -54,6 +55,11 @@ public:
   const LabeledAxisAccessor grain_size;
   const LabeledAxisAccessor stoichiometry;
 
+  /* Override this to intercep the call and pass it on to the submodel, which is of type
+   * torch::jit::script::Module. Normally a NEML2 register call would take care of this, but that
+   * only supports torch::nn::Module*/
+  virtual void to(torch::Device device, torch::Dtype dtype, bool non_blocking = false) override;
+
 protected:
   /// The flow rate
   virtual void set_value(const LabeledVector & in,
@@ -61,6 +67,6 @@ protected:
                          LabeledMatrix * dout_din = nullptr,
                          LabeledTensor3D * d2out_din2 = nullptr) const override;
 
-  std::shared_ptr<DNN> _surrogate;
+  std::unique_ptr<DNN> _surrogate;
 };
 } // namespace neml2

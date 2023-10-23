@@ -66,7 +66,7 @@ DanielFlowRate::DanielFlowRate(const ParameterSet & params)
     temperature(declare_input_variable<Scalar>(params.get<LabeledAxisAccessor>("temperature"))),
     grain_size(declare_input_variable<Scalar>(params.get<LabeledAxisAccessor>("grain_size"))),
     stoichiometry(declare_input_variable<Scalar>(params.get<LabeledAxisAccessor>("stoichiometry"))),
-    _surrogate(register_module("surrogate", std::make_shared<DNN>("/tmp/creep_model.pt")))
+    _surrogate(std::make_unique<DNN>("/tmp/creep_model.pt"))
 {
   setup();
 
@@ -100,4 +100,12 @@ DanielFlowRate::set_value(const LabeledVector & in,
   if (out)
     out->set(gamma_dot, flow_rate);
 }
+
+void
+DanielFlowRate::to(torch::Device device, torch::Dtype dtype, bool non_blocking)
+{
+  Model::to(device, dtype, non_blocking);
+  _surrogate->to(device, dtype, non_blocking);
+}
+
 } // namespace neml2
