@@ -30,16 +30,6 @@
 
 namespace neml2
 {
-class DNN : public torch::jit::script::Module
-{
-public:
-  DNN(const std::string & filename);
-
-  torch::Tensor forward(torch::Tensor x);
-
-private:
-  torch::Tensor _x_mean, _x_std, _y_mean, _y_std;
-};
 
 class DanielFlowRate : public Model
 {
@@ -55,9 +45,6 @@ public:
   const LabeledAxisAccessor grain_size;
   const LabeledAxisAccessor stoichiometry;
 
-  /* Override this to intercep the call and pass it on to the submodel, which is of type
-   * torch::jit::script::Module. Normally a NEML2 register call would take care of this, but that
-   * only supports torch::nn::Module*/
   virtual void to(const torch::Device & device) override;
 
 protected:
@@ -67,6 +54,13 @@ protected:
                          LabeledMatrix * dout_din = nullptr,
                          LabeledTensor3D * d2out_din2 = nullptr) const override;
 
-  std::unique_ptr<DNN> _surrogate;
+  /// we need to use a pointer here because forward is not const qualified, :eye_roll:
+  std::unique_ptr<torch::jit::script::Module> _surrogate;
+
+  const BatchTensor & _x_mean;
+  const BatchTensor & _x_std;
+  const Scalar & _y_mean;
+  const Scalar & _y_std;
 };
+
 } // namespace neml2
