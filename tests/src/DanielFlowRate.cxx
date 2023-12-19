@@ -26,23 +26,6 @@
 
 namespace neml2
 {
-DNN::DNN(const std::string & filename)
-  : _x_mean(torch::tensor({1.8501e+03, 4.9885e-05, 4.9936e+07, 2.0289e-03}, {torch::kFloat64})),
-    _x_std(torch::tensor({2.0555e+02, 2.8894e-05, 2.8824e+07, 2.7551e-03}, {torch::kFloat64})),
-    _y_mean(torch::tensor({-14.4908}, {torch::kFloat64})),
-    _y_std(torch::tensor({5.2951}, {torch::kFloat64}))
-{
-  torch::jit::script::Module * base = this;
-  *base = torch::jit::load(filename);
-}
-
-torch::Tensor
-DNN::forward(torch::Tensor x)
-{
-  std::vector<torch::jit::IValue> inputs(1, (x - _x_mean) / _x_std);
-  return torch::jit::script::Module::forward(inputs).toTensor() * _y_std + _y_mean;
-}
-
 register_NEML2_object(DanielFlowRate);
 
 OptionSet
@@ -56,6 +39,8 @@ DanielFlowRate::expected_options()
   options.set<LabeledAxisAccessor>("stoichiometry") = {{"forces", "stoichiometry"}};
   options.set<bool>("use_AD_first_derivative") = true;
   options.set<bool>("use_AD_second_derivative") = true;
+  options.set<std::string>("model_file_name") =
+      "/home/schwd/Programs/bison-torch/data/creep_model.pt";
   return options;
 }
 
@@ -67,7 +52,14 @@ DanielFlowRate::DanielFlowRate(const OptionSet & options)
     grain_size(declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("grain_size"))),
     stoichiometry(
         declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("stoichiometry"))),
-    _surrogate(std::make_unique<DNN>("/tmp/creep_model.pt"))
+    _surrogate(std::make_unique<torch::jit::script::Module>(
+        torch::jit::load(options.get<std::string>("model_file_name")))),
+    _x_mean(declare_buffer<BatchTensor>(
+        "x_mean", BatchTensor(torch::tensor({1.8501e+03, 4.9885e-05, 4.9936e+07, 2.0289e-03}), 0))),
+    _x_std(declare_buffer<BatchTensor>(
+        "x_std", BatchTensor(torch::tensor({2.0555e+02, 2.8894e-05, 2.8824e+07, 2.7551e-03}), 0))),
+    _y_mean(declare_buffer<Scalar>("y_mean", Scalar(-14.4908, default_tensor_options))),
+    _y_std(declare_buffer<Scalar>("y_std", Scalar(5.2951, default_tensor_options)))
 {
   setup();
 
@@ -75,7 +67,6 @@ DanielFlowRate::DanielFlowRate(const OptionSet & options)
   // 2. We need the parameters to have the same options as ours
   for (auto param : _surrogate->parameters(/*recursive=*/true))
     param.requires_grad_(false);
-  _surrogate->to(TORCH_DTYPE);
 }
 
 void
@@ -95,8 +86,10 @@ DanielFlowRate::set_value(const LabeledVector & in,
   auto ST = in.get<Scalar>(stoichiometry);
 
   // Compute Daniel's flow rate
-  auto x = torch::cat({T, G, S, ST}, -1);
-  Scalar gamma_dot = _surrogate->forward(x);
+  auto x = BatchTensor(torch::transpose(torch::vstack({T, G, S, ST}), 0, 1), 1);
+  std::vector<torch::jit::IValue> inputs(1, (x - _x_mean) / _x_std);
+  auto gamma_dot =
+      math::exp(BatchTensor(_surrogate->forward(inputs).toTensor(), 1) * _y_std + _y_mean);
 
   if (out)
     out->set(gamma_dot, flow_rate);
