@@ -34,7 +34,7 @@ DanielFlowRate::expected_options()
   auto options = Model::expected_options();
   options.set<LabeledAxisAccessor>("mandel_stress") = {{"state", "internal", "M"}};
   options.set<LabeledAxisAccessor>("flow_rate") = {{"state", "internal", "gamma_rate"}};
-  options.set<LabeledAxisAccessor>("temperature") = {{"forces", "T"}};
+  options.set<LabeledAxisAccessor>("temperature") = {{"forces", std::string("T")}};
   options.set<LabeledAxisAccessor>("grain_size") = {{"forces", "grain_size"}};
   options.set<LabeledAxisAccessor>("stoichiometry") = {{"forces", "stoichiometry"}};
   options.set<bool>("use_AD_first_derivative") = true;
