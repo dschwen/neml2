@@ -70,6 +70,30 @@ DanielFlowRate::DanielFlowRate(const OptionSet & options)
 }
 
 void
+print_torch_tensor_info(const torch::Tensor & x)
+{
+  std::cout << "      dimension: " << x.dim() << std::endl;
+  std::cout << "          shape: " << x.sizes() << std::endl;
+  std::cout << "          dtype: " << x.dtype() << std::endl;
+  std::cout << "         device: " << x.device() << std::endl;
+  std::cout << "  requires grad: " << (x.requires_grad() ? "true" : "false") << std::endl;
+  std::cout << std::endl;
+}
+
+void
+print_neml2_tensor_info(const neml2::BatchTensor & x)
+{
+  std::cout << "NEML2 specific info" << std::endl;
+  std::cout << "-------------------" << std::endl;
+  std::cout << "batch dimension: " << x.batch_dim() << std::endl;
+  std::cout << " base dimension: " << x.base_dim() << std::endl;
+  std::cout << "    batch shape: " << x.batch_sizes() << std::endl;
+  std::cout << "     base shape: " << x.base_sizes() << std::endl;
+  std::cout << "   base storage: " << x.base_storage() << std::endl;
+  std::cout << std::endl;
+}
+
+void
 DanielFlowRate::set_value(const LabeledVector & in,
                           LabeledVector * out,
                           LabeledMatrix * dout_din,
@@ -80,7 +104,8 @@ DanielFlowRate::set_value(const LabeledVector & in,
 
   // Grab the mandel stress and temperature
   auto M = in.get<SR2>(mandel_stress);
-  auto S = M.dev();
+  auto Md = M.dev();
+  auto S = math::sqrt(1.5 * Md.inner(Md));
   auto T = in.get<Scalar>(temperature);
   auto G = in.get<Scalar>(grain_size);
   auto ST = in.get<Scalar>(stoichiometry);
