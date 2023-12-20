@@ -1,42 +1,41 @@
 [Tensors]
   [end_time]
-    type = LogSpaceTensor
+    type = LogspaceScalar
     start = -3
     end = -3
-    steps = 20
+    nstep = 20
   []
   [times]
-    type = LinSpaceTensor
+    type = LinspaceScalar
     end = end_time
-    steps = 100
+    nstep = 100
   []
   [start_temperature]
-    type = LinSpaceTensor
+    type = LinspaceScalar
     start = 100
     end = 1000
-    steps = 20
+    nstep = 20
   []
   [end_temperature]
-    type = LinSpaceTensor
+    type = LinspaceScalar
     start = 200
     end = 1500
-    steps = 20
+    nstep = 20
   []
   [temperatures]
-    type = LinSpaceTensor
+    type = LinspaceScalar
     start = start_temperature
     end = end_temperature
-    steps = 100
+    nstep = 100
   []
   [max_strain]
-    type = InitializedSymR2
+    type = FillSR2
     values = '0.1 -0.05 -0.05'
-    nbatch = 20
   []
   [strains]
-    type = LinSpaceTensor
+    type = LinspaceScalar
     end = max_strain
-    steps = 100
+    nstep = 100
   []
 []
 
@@ -66,10 +65,6 @@
   []
   [flow_rate]
     type = DanielFlowRate
-    parameter_1 = 100
-    parameter_2 = 0.1
-    parameter_3 = 2
-    parameter_4 = 1
   []
   [flow_direction]
     type = J2FlowDirection
@@ -78,7 +73,7 @@
     type = AssociativePlasticFlow
   []
   [Erate]
-    type = SymR2ForceRate
+    type = SR2ForceRate
     force = 'E'
   []
   [Eerate]
@@ -92,7 +87,7 @@
     rate_form = true
   []
   [integrate_stress]
-    type = SymR2BackwardEulerTimeIntegration
+    type = SR2BackwardEulerTimeIntegration
     variable = 'S'
   []
   [implicit_rate]
