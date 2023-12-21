@@ -11,16 +11,17 @@
     end = end_time
     nstep = 100
   []
+
   [start_temperature]
     type = LinspaceScalar
-    start = 100
-    end = 1000
+    start = 1970
+    end = 1980
     nstep = 20
   []
   [end_temperature]
     type = LinspaceScalar
-    start = 200
-    end = 1500
+    start = 2000
+    end = 2010
     nstep = 20
   []
   [temperatures]
@@ -29,20 +30,60 @@
     end = end_temperature
     nstep = 100
   []
+
+  [start_grain_size]
+    type = LinspaceScalar
+    start = 5.9000e-05
+    end = 6.000e-05
+    nstep = 20
+  []
+  [end_grain_size]
+    type = LinspaceScalar
+    start = 8.9000e-05
+    end = 9.000e-05
+    nstep = 20
+  []
+  [grain_sizes]
+    type = LinspaceScalar
+    start = start_grain_size
+    end = end_grain_size
+    nstep = 100
+  []
+
+
+  [start_stoichiometry]
+    type = LinspaceScalar
+    start = 6.9688e-05
+    end = 7.000e-05
+    nstep = 20
+  []
+  [end_stoichiometry]
+    type = LinspaceScalar
+    start = 8.5000e-05
+    end = 9.000e-05
+    nstep = 20
+  []
+  [stoichiometries]
+    type = LinspaceScalar
+    start = start_stoichiometry
+    end = end_stoichiometry
+    nstep = 100
+  []
+
   [exx]
     type = FullScalar
     batch_shape = '(20)'
-    value = 0.1
+    value = 2.9e+07
   []
   [eyy]
     type = FullScalar
     batch_shape = '(20)'
-    value = -0.05
+    value = 0
   []
   [ezz]
     type = FullScalar
     batch_shape = '(20)'
-    value = -0.05
+    value = 0
   []
   [max_strain]
     type = FillSR2
@@ -63,6 +104,8 @@
     times = 'times'
     prescribed_temperatures = 'temperatures'
     prescribed_strains = 'strains'
+    prescribed_grain_sizes = 'grain_sizes'
+    prescribed_stoichiometries = 'stoichiometries'
     verbose = true
   []
 []

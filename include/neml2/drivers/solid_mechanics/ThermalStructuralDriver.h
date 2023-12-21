@@ -39,7 +39,14 @@ protected:
   virtual void update_forces() override;
   void check_integrity() const override;
 
+  template <typename T>
+  void check_integrity(const T & obj, const std::string & name) const;
+
   LabeledAxisAccessor _temperature_name;
   Scalar _temperature;
+  LabeledAxisAccessor _grain_size_name;
+  Scalar _grain_size;
+  LabeledAxisAccessor _stoichiometry_name;
+  Scalar _stoichiometry;
 };
 }
