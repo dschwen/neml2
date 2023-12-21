@@ -39,8 +39,7 @@ DanielFlowRate::expected_options()
   options.set<LabeledAxisAccessor>("stoichiometry") = {{"forces", "stoichiometry"}};
   options.set<bool>("use_AD_first_derivative") = true;
   options.set<bool>("use_AD_second_derivative") = true;
-  options.set<std::string>("model_file_name") =
-      "/home/schwd/Programs/bison-torch/data/creep_model.pt";
+  options.set<std::string>("model_file_name") = "model.pt";
   return options;
 }
 
