@@ -88,9 +88,14 @@ DanielFlowRate::set_value(const LabeledVector & in,
 
   // Compute Daniel's flow rate
   auto x = BatchTensor(torch::transpose(torch::vstack({T, G, S, ST}), 0, 1), 1);
+
   std::vector<torch::jit::IValue> inputs(1, (x - _x_mean) / _x_std);
   auto gamma_dot =
       math::exp(BatchTensor(_surrogate->forward(inputs).toTensor(), 1) * _y_std + _y_mean);
+
+  std::cout << "===== x =====\n" << x << std::endl;
+  std::cout << "===== input (normalized) =====\n" << inputs[0] << std::endl;
+  std::cout << "===== gamma_dot =====\n" << gamma_dot << std::endl;
 
   if (out)
     out->set(gamma_dot, flow_rate);
