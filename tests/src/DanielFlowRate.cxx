@@ -65,32 +65,9 @@ DanielFlowRate::DanielFlowRate(const OptionSet & options)
 
   // 1. We don't need the parameter gradients
   // 2. We need the parameters to have the same options as ours
+  _surrogate->to(torch::kFloat64);
   for (auto param : _surrogate->parameters(/*recursive=*/true))
     param.requires_grad_(false);
-}
-
-void
-print_torch_tensor_info(const torch::Tensor & x)
-{
-  std::cout << "      dimension: " << x.dim() << std::endl;
-  std::cout << "          shape: " << x.sizes() << std::endl;
-  std::cout << "          dtype: " << x.dtype() << std::endl;
-  std::cout << "         device: " << x.device() << std::endl;
-  std::cout << "  requires grad: " << (x.requires_grad() ? "true" : "false") << std::endl;
-  std::cout << std::endl;
-}
-
-void
-print_neml2_tensor_info(const neml2::BatchTensor & x)
-{
-  std::cout << "NEML2 specific info" << std::endl;
-  std::cout << "-------------------" << std::endl;
-  std::cout << "batch dimension: " << x.batch_dim() << std::endl;
-  std::cout << " base dimension: " << x.base_dim() << std::endl;
-  std::cout << "    batch shape: " << x.batch_sizes() << std::endl;
-  std::cout << "     base shape: " << x.base_sizes() << std::endl;
-  std::cout << "   base storage: " << x.base_storage() << std::endl;
-  std::cout << std::endl;
 }
 
 void
