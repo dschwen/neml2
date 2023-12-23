@@ -22,45 +22,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#pragma once
+#include <catch2/catch.hpp>
 
-#include "neml2/models/Model.h"
-#include <torch/script.h>
-#include <memory>
+#include "utils.h"
+#include "neml2/drivers/TransientDriver.h"
 
-namespace neml2
+using namespace neml2;
+
+TEST_CASE("Test Daniel's new model")
 {
+  load_model("regression/for_daniel_new/model.i");
+  auto & driver = Factory::get_object<TransientDriver>("Drivers", "driver");
+  driver.run();
 
-class DanielFlowRate : public Model
-{
-public:
-  static OptionSet expected_options();
-
-  DanielFlowRate(const OptionSet & options);
-
-  const LabeledAxisAccessor trial_effective_stress;
-  const LabeledAxisAccessor flow_rate;
-
-  const LabeledAxisAccessor temperature;
-  const LabeledAxisAccessor grain_size;
-  const LabeledAxisAccessor stoichiometry;
-
-  virtual void to(const torch::Device & device) override;
-
-protected:
-  /// The flow rate
-  virtual void set_value(const LabeledVector & in,
-                         LabeledVector * out,
-                         LabeledMatrix * dout_din = nullptr,
-                         LabeledTensor3D * d2out_din2 = nullptr) const override;
-
-  /// we need to use a pointer here because forward is not const qualified, :eye_roll:
-  std::unique_ptr<torch::jit::script::Module> _surrogate;
-
-  const BatchTensor & _x_mean;
-  const BatchTensor & _x_std;
-  const Scalar & _y_mean;
-  const Scalar & _y_std;
-};
-
-} // namespace neml2
+  auto result = driver.result();
+  auto strain = result["input"]->named_buffers()["forces/E"];
+  auto stress = result["output"]->named_buffers()["state/S"];
+  std::cout << torch::stack({strain.index({torch::indexing::Slice(), 0, 0}),
+                             stress.index({torch::indexing::Slice(), 0, 0})})
+                   .transpose(0, 1)
+            << std::endl;
+}

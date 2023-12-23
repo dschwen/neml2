@@ -32,7 +32,7 @@ OptionSet
 DanielFlowRate::expected_options()
 {
   auto options = Model::expected_options();
-  options.set<LabeledAxisAccessor>("mandel_stress") = {{"state", "internal", "M"}};
+  options.set<LabeledAxisAccessor>("trial_effective_stress") = {{"state", "internal", "s"}};
   options.set<LabeledAxisAccessor>("flow_rate") = {{"state", "internal", "gamma_rate"}};
   options.set<LabeledAxisAccessor>("temperature") = {{"forces", std::string("T")}};
   options.set<LabeledAxisAccessor>("grain_size") = {{"forces", "grain_size"}};
@@ -45,7 +45,8 @@ DanielFlowRate::expected_options()
 
 DanielFlowRate::DanielFlowRate(const OptionSet & options)
   : Model(options),
-    mandel_stress(declare_input_variable<SR2>(options.get<LabeledAxisAccessor>("mandel_stress"))),
+    trial_effective_stress(
+        declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("trial_effective_stress"))),
     flow_rate(declare_output_variable<Scalar>(options.get<LabeledAxisAccessor>("flow_rate"))),
     temperature(declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("temperature"))),
     grain_size(declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("grain_size"))),
@@ -78,24 +79,18 @@ DanielFlowRate::set_value(const LabeledVector & in,
   neml_assert_dbg(!d2out_din2, "I am too lazy to implement second derivatives");
   neml_assert_dbg(!dout_din, "Try AD");
 
-  // Grab the mandel stress and temperature
-  auto M = in.get<SR2>(mandel_stress);
-  auto Md = M.dev();
-  auto S = math::sqrt(1.5 * Md.inner(Md));
+  // Grab the trial stress, temperature, grain size, and stoichiometry
+  // These are the inputs to the neural network
+  auto s = in.get<Scalar>(trial_effective_stress);
   auto T = in.get<Scalar>(temperature);
   auto G = in.get<Scalar>(grain_size);
   auto ST = in.get<Scalar>(stoichiometry);
 
   // Compute Daniel's flow rate
-  auto x = BatchTensor(torch::transpose(torch::vstack({T, G, S, ST}), 0, 1), 1);
-
-  std::vector<torch::jit::IValue> inputs(1, (x - _x_mean) / _x_std);
-  auto gamma_dot =
-      math::exp(BatchTensor(_surrogate->forward(inputs).toTensor(), 1) * _y_std + _y_mean);
-
-  std::cout << "===== x =====\n" << x << std::endl;
-  std::cout << "===== input (normalized) =====\n" << inputs[0] << std::endl;
-  std::cout << "===== gamma_dot =====\n" << gamma_dot << std::endl;
+  auto x = BatchTensor(torch::transpose(torch::vstack({T, G, s, ST}), 0, 1), in.batch_dim());
+  auto x0 = (x - _x_mean) / _x_std;
+  auto gamma0_dot = Scalar(_surrogate->forward({x0}).toTensor().squeeze(), in.batch_dim());
+  auto gamma_dot = math::exp(gamma0_dot * _y_std + _y_mean);
 
   if (out)
     out->set(gamma_dot, flow_rate);
