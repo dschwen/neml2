@@ -1,9 +1,10 @@
+nbatch=5
 [Tensors]
   [end_time]
     type = LogspaceScalar
     start = -3
     end = -3
-    nstep = 20
+    nstep = ${nbatch}
   []
   [times]
     type = LinspaceScalar
@@ -16,13 +17,13 @@
     type = LinspaceScalar
     start = 1970
     end = 1980
-    nstep = 20
+    nstep = ${nbatch}
   []
   [end_temperature]
     type = LinspaceScalar
     start = 2000
     end = 2010
-    nstep = 20
+    nstep = ${nbatch}
   []
   [temperatures]
     type = LinspaceScalar
@@ -35,13 +36,13 @@
     type = LinspaceScalar
     start = 5.9000e-05
     end = 6.000e-05
-    nstep = 20
+    nstep = ${nbatch}
   []
   [end_grain_size]
     type = LinspaceScalar
     start = 8.9000e-05
     end = 9.000e-05
-    nstep = 20
+    nstep = ${nbatch}
   []
   [grain_sizes]
     type = LinspaceScalar
@@ -55,13 +56,13 @@
     type = LinspaceScalar
     start = 6.9688e-05
     end = 7.000e-05
-    nstep = 20
+    nstep = ${nbatch}
   []
   [end_stoichiometry]
     type = LinspaceScalar
     start = 8.5000e-05
     end = 9.000e-05
-    nstep = 20
+    nstep = ${nbatch}
   []
   [stoichiometries]
     type = LinspaceScalar
@@ -72,17 +73,17 @@
 
   [exx]
     type = FullScalar
-    batch_shape = '(20)'
+    batch_shape = '(${nbatch})'
     value = 2.9e+07
   []
   [eyy]
     type = FullScalar
-    batch_shape = '(20)'
+    batch_shape = '(${nbatch})'
     value = 0
   []
   [ezz]
     type = FullScalar
-    batch_shape = '(20)'
+    batch_shape = '(${nbatch})'
     value = 0
   []
   [max_strain]

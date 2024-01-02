@@ -33,10 +33,12 @@ DanielFlowRate::expected_options()
 {
   auto options = Model::expected_options();
   options.set<LabeledAxisAccessor>("trial_effective_stress") = {{"state", "internal", "s"}};
+  // options.set<LabeledAxisAccessor>("dt") = {{"forces", "dt"}};
   options.set<LabeledAxisAccessor>("flow_rate") = {{"state", "internal", "gamma_rate"}};
   options.set<LabeledAxisAccessor>("temperature") = {{"forces", std::string("T")}};
   options.set<LabeledAxisAccessor>("grain_size") = {{"forces", "grain_size"}};
   options.set<LabeledAxisAccessor>("stoichiometry") = {{"forces", "stoichiometry"}};
+  // options.set<LabeledAxisAccessor>("fission_rate") = {{"forces", "fission_rate"}};
   options.set<bool>("use_AD_first_derivative") = true;
   options.set<bool>("use_AD_second_derivative") = true;
   options.set<std::string>("model_file_name") = "model.pt";
@@ -47,19 +49,23 @@ DanielFlowRate::DanielFlowRate(const OptionSet & options)
   : Model(options),
     trial_effective_stress(
         declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("trial_effective_stress"))),
+    // dt(declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("dt"))),
     flow_rate(declare_output_variable<Scalar>(options.get<LabeledAxisAccessor>("flow_rate"))),
     temperature(declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("temperature"))),
     grain_size(declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("grain_size"))),
     stoichiometry(
         declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("stoichiometry"))),
+    // fission_rate(declare_input_variable<Scalar>(options.get<LabeledAxisAccessor>("fission_rate"))),
     _surrogate(std::make_unique<torch::jit::script::Module>(
         torch::jit::load(options.get<std::string>("model_file_name")))),
     _x_mean(declare_buffer<BatchTensor>(
-        "x_mean", BatchTensor(torch::tensor({1.8501e+03, 4.9885e-05, 4.9936e+07, 2.0289e-03}), 0))),
+        "x_mean",
+        BatchTensor(torch::tensor({1.850000e+03, 5.000000e-05, 5.000000e+07, 2.034279e-03}), 0))),
     _x_std(declare_buffer<BatchTensor>(
-        "x_std", BatchTensor(torch::tensor({2.0555e+02, 2.8894e-05, 2.8824e+07, 2.7551e-03}), 0))),
-    _y_mean(declare_buffer<Scalar>("y_mean", Scalar(-14.4908, default_tensor_options))),
-    _y_std(declare_buffer<Scalar>("y_std", Scalar(5.2951, default_tensor_options)))
+        "x_std",
+        BatchTensor(torch::tensor({2.049391e+02, 2.886175e-05, 2.886175e+07, 2.750995e-03}), 0))),
+    _y_mean(declare_buffer<Scalar>("y_mean", Scalar(1.448253e+01, default_tensor_options))),
+    _y_std(declare_buffer<Scalar>("y_std", Scalar(5.293281e+00, default_tensor_options)))
 {
   setup();
 
@@ -91,6 +97,11 @@ DanielFlowRate::set_value(const LabeledVector & in,
   auto x0 = (x - _x_mean) / _x_std;
   auto gamma0_dot = Scalar(_surrogate->forward({x0}).toTensor().squeeze(), in.batch_dim());
   auto gamma_dot = math::exp(gamma0_dot * _y_std + _y_mean);
+
+  // // irradiation creep
+  // auto c3 = _a7 * fission_rate;
+  // auto activation_term3 = std::exp(-_q3 / _temperature[_qp]);
+  // auto term_3 = c3 * activation_term3;
 
   if (out)
     out->set(gamma_dot, flow_rate);

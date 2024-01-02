@@ -41,9 +41,11 @@ public:
   const LabeledAxisAccessor trial_effective_stress;
   const LabeledAxisAccessor flow_rate;
 
+  // const LabeledAxisAccessor dt;
   const LabeledAxisAccessor temperature;
   const LabeledAxisAccessor grain_size;
   const LabeledAxisAccessor stoichiometry;
+  // const LabeledAxisAccessor fission_rate;
 
   virtual void to(const torch::Device & device) override;
 
