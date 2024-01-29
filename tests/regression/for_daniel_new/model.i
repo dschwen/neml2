@@ -4,8 +4,8 @@ nt = 100 # time steps
 [Tensors]
   [end_time]
     type = LogspaceScalar
-    start = -3
-    end = -3
+    start = 3
+    end = 3
     nstep = ${nb}
   []
   [times]
@@ -75,10 +75,7 @@ nt = 100 # time steps
   [exx]
     type = FullScalar
     batch_shape = '(${nb})'
-    value = 2.9e+07
-    ###################################################
-    # Was this a typo? 2.9e+07 is a galactical strain
-    ###################################################
+    value = 1e-3
   []
   [eyy]
     type = FullScalar
@@ -124,7 +121,7 @@ nt = 100 # time steps
 
 [Models]
   ###############################################################################
-  # Use the trial state to precalculate invariant flow directions 
+  # Use the trial state to precalculate invariant flow directions
   # prior to radial return
   ###############################################################################
   [trial_elastic_strain]
@@ -148,7 +145,7 @@ nt = 100 # time steps
   []
   ###############################################################################
   # The actual radial return:
-  # Since the flow directions are invariant, we only need to integrate 
+  # Since the flow directions are invariant, we only need to integrate
   # the consistency parameter.
   ###############################################################################
   [trial_flow_rate]
@@ -174,7 +171,7 @@ nt = 100 # time steps
   []
   [trial_effective_stress]
     type = ComposedModel
-    models = "trial_flow_rate 
+    models = "trial_flow_rate
               plastic_strain_rate plastic_strain elastic_strain
               cauchy_stress mandel_stress vonmises"
   []
@@ -198,7 +195,7 @@ nt = 100 # time steps
   []
   [model0]
     type = ComposedModel
-    models = "trial_state return_map trial_flow_rate 
+    models = "trial_state return_map trial_flow_rate
               plastic_strain_rate plastic_strain"
     additional_outputs = 'state/internal/Ep'
   []
