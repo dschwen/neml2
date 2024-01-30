@@ -4,8 +4,8 @@ nt = 100 # time steps
 [Tensors]
   [end_time]
     type = LogspaceScalar
-    start = 3
-    end = 3
+    start = 8
+    end = 8
     nstep = ${nb}
   []
   [times]
@@ -17,14 +17,14 @@ nt = 100 # time steps
 
   [start_temperature]
     type = LinspaceScalar
-    start = 1970
-    end = 1980
+    start = 2200
+    end = 2200
     nstep = ${nb}
   []
   [end_temperature]
     type = LinspaceScalar
-    start = 2000
-    end = 2010
+    start = 2200
+    end = 2200
     nstep = ${nb}
   []
   [temperatures]
@@ -36,14 +36,14 @@ nt = 100 # time steps
 
   [start_grain_size]
     type = LinspaceScalar
-    start = 5.9000e-05
-    end = 6.000e-05
+    start = 5.000e-05
+    end = 5.000e-05
     nstep = ${nb}
   []
   [end_grain_size]
     type = LinspaceScalar
-    start = 8.9000e-05
-    end = 9.000e-05
+    start = 5.000e-05
+    end = 5.000e-05
     nstep = ${nb}
   []
   [grain_sizes]
@@ -55,14 +55,14 @@ nt = 100 # time steps
 
   [start_stoichiometry]
     type = LinspaceScalar
-    start = 6.9688e-05
-    end = 7.000e-05
+    start = 1e-05
+    end = 1e-05
     nstep = ${nb}
   []
   [end_stoichiometry]
     type = LinspaceScalar
-    start = 8.5000e-05
-    end = 9.000e-05
+    start = 1e-05
+    end = 1e-05
     nstep = ${nb}
   []
   [stoichiometries]
@@ -75,17 +75,17 @@ nt = 100 # time steps
   [exx]
     type = FullScalar
     batch_shape = '(${nb})'
-    value = 1e-3
+    value = 2.5e-4
   []
   [eyy]
     type = FullScalar
     batch_shape = '(${nb})'
-    value = 0
+    value = 1e-4
   []
   [ezz]
     type = FullScalar
     batch_shape = '(${nb})'
-    value = 0
+    value = 1e-4
   []
   [max_strain]
     type = FillSR2
@@ -130,8 +130,8 @@ nt = 100 # time steps
   []
   [cauchy_stress]
     type = LinearIsotropicElasticity
-    youngs_modulus = 1e5
-    poisson_ratio = 0.3
+    youngs_modulus = 2e11
+    poisson_ratio = 0.345
   []
   [mandel_stress]
     type = IsotropicMandelStress

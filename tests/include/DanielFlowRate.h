@@ -47,7 +47,7 @@ public:
   const LabeledAxisAccessor stoichiometry;
   // const LabeledAxisAccessor fission_rate;
 
-  virtual void to(const torch::Device & device) override;
+  virtual void to(const torch::TensorOptions & options) override;
 
 protected:
   /// The flow rate

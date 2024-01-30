@@ -64,8 +64,8 @@ DanielFlowRate::DanielFlowRate(const OptionSet & options)
     _x_std(declare_buffer<BatchTensor>(
         "x_std",
         BatchTensor(torch::tensor({2.049391e+02, 2.886175e-05, 2.886175e+07, 2.750995e-03}), 0))),
-    _y_mean(declare_buffer<Scalar>("y_mean", Scalar(1.448253e+01, default_tensor_options))),
-    _y_std(declare_buffer<Scalar>("y_std", Scalar(5.293281e+00, default_tensor_options)))
+    _y_mean(declare_buffer<Scalar>("y_mean", Scalar(1.448253e+01, default_tensor_options()))),
+    _y_std(declare_buffer<Scalar>("y_std", Scalar(5.293281e+00, default_tensor_options())))
 {
   setup();
 
@@ -108,10 +108,10 @@ DanielFlowRate::set_value(const LabeledVector & in,
 }
 
 void
-DanielFlowRate::to(const torch::Device & device)
+DanielFlowRate::to(const torch::TensorOptions & options)
 {
-  Model::to(device);
-  _surrogate->to(device);
+  Model::to(options);
+  _surrogate->to(options.device());
 }
 
 } // namespace neml2
