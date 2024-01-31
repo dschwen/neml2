@@ -31,14 +31,15 @@ register_NEML2_object(DanielFlowRate);
 OptionSet
 DanielFlowRate::expected_options()
 {
+  using vecstr = std::vector<std::string>;
   auto options = Model::expected_options();
-  options.set<LabeledAxisAccessor>("trial_effective_stress") = {{"state", "internal", "s"}};
-  // options.set<LabeledAxisAccessor>("dt") = {{"forces", "dt"}};
-  options.set<LabeledAxisAccessor>("flow_rate") = {{"state", "internal", "gamma_rate"}};
-  options.set<LabeledAxisAccessor>("temperature") = {{"forces", std::string("T")}};
-  options.set<LabeledAxisAccessor>("grain_size") = {{"forces", "grain_size"}};
-  options.set<LabeledAxisAccessor>("stoichiometry") = {{"forces", "stoichiometry"}};
-  // options.set<LabeledAxisAccessor>("fission_rate") = {{"forces", "fission_rate"}};
+  options.set<LabeledAxisAccessor>("trial_effective_stress") = vecstr{"state", "internal", "s"};
+  // options.set<LabeledAxisAccessor>("dt") = vecstr{"forces", "dt"};
+  options.set<LabeledAxisAccessor>("flow_rate") = vecstr{"state", "internal", "gamma_rate"};
+  options.set<LabeledAxisAccessor>("temperature") = vecstr{"forces", std::string("T")};
+  options.set<LabeledAxisAccessor>("grain_size") = vecstr{"forces", "grain_size"};
+  options.set<LabeledAxisAccessor>("stoichiometry") = vecstr{"forces", "stoichiometry"};
+  // options.set<LabeledAxisAccessor>("fission_rate") = vecstr{"forces", "fission_rate"};
   options.set<bool>("use_AD_first_derivative") = true;
   options.set<bool>("use_AD_second_derivative") = true;
   options.set<std::string>("model_file_name") = "model.pt";
@@ -64,7 +65,7 @@ DanielFlowRate::DanielFlowRate(const OptionSet & options)
     _x_std(declare_buffer<BatchTensor>(
         "x_std",
         BatchTensor(torch::tensor({2.049391e+02, 2.886175e-05, 2.886175e+07, 2.750995e-03}), 0))),
-    _y_mean(declare_buffer<Scalar>("y_mean", Scalar(1.448253e+01, default_tensor_options()))),
+    _y_mean(declare_buffer<Scalar>("y_mean", Scalar(-1.448253e+01, default_tensor_options()))),
     _y_std(declare_buffer<Scalar>("y_std", Scalar(5.293281e+00, default_tensor_options())))
 {
   setup();

@@ -1,11 +1,11 @@
-nb = 20 # batch size
+nb = 40 # batch size
 nt = 100 # time steps
 
 [Tensors]
   [end_time]
     type = LogspaceScalar
-    start = 8
-    end = 8
+    start = -1
+    end = -1
     nstep = ${nb}
   []
   [times]
@@ -55,14 +55,14 @@ nt = 100 # time steps
 
   [start_stoichiometry]
     type = LinspaceScalar
-    start = 1e-05
-    end = 1e-05
+    start = 0.01
+    end = 0.01
     nstep = ${nb}
   []
   [end_stoichiometry]
     type = LinspaceScalar
-    start = 1e-05
-    end = 1e-05
+    start =  0.01
+    end =  0.01
     nstep = ${nb}
   []
   [stoichiometries]
@@ -110,6 +110,13 @@ nt = 100 # time steps
     prescribed_stoichiometries = 'stoichiometries'
     verbose = true
   []
+  # [driver]
+  #   type = SolidMechanicsDriver
+  #   model = 'model'
+  #   times = 'times'
+  #   prescribed_strains = 'strains'
+  #   verbose = true
+  # []
 []
 
 [Solvers]
@@ -179,6 +186,11 @@ nt = 100 # time steps
     type = DanielFlowRate
     model_file_name = 'regression/for_daniel_new/gold/model.pt'
   []
+  # [flow_rate]
+  #   type = PerzynaPlasticFlowRate
+  #   reference_stress = 1e7
+  #   exponent = 2
+  # []
   [integrate_gamma]
     type = ScalarBackwardEulerTimeIntegration
     variable = 'internal/gamma'

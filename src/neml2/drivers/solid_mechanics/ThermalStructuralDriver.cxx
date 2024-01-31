@@ -32,11 +32,11 @@ OptionSet
 ThermalStructuralDriver::expected_options()
 {
   auto options = SolidMechanicsDriver::expected_options();
-  options.set<LabeledAxisAccessor>("temperature") =
-      LabeledAxisAccessor{{"forces", std::string("T")}};
-  options.set<LabeledAxisAccessor>("grain_size") = LabeledAxisAccessor{{"forces", "grain_size"}};
-  options.set<LabeledAxisAccessor>("stoichiometry") =
-      LabeledAxisAccessor{{"forces", "stoichiometry"}};
+  using vecstr = std::vector<std::string>;
+
+  options.set<LabeledAxisAccessor>("temperature") = vecstr{"forces", std::string("T")};
+  options.set<LabeledAxisAccessor>("grain_size") = vecstr{"forces", "grain_size"};
+  options.set<LabeledAxisAccessor>("stoichiometry") = vecstr{"forces", "stoichiometry"};
 
   options.set<CrossRef<torch::Tensor>>("prescribed_temperatures");
   options.set<CrossRef<torch::Tensor>>("prescribed_grain_sizes");
