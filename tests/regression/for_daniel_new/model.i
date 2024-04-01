@@ -4,8 +4,8 @@ nt = 100 # time steps
 [Tensors]
   [end_time]
     type = LogspaceScalar
-    start = -1
-    end = -1
+    start = -15
+    end = -15
     nstep = ${nb}
   []
   [times]
@@ -75,17 +75,17 @@ nt = 100 # time steps
   [exx]
     type = FullScalar
     batch_shape = '(${nb})'
-    value = 2.5e-4
+    value = 1e-4
   []
   [eyy]
     type = FullScalar
     batch_shape = '(${nb})'
-    value = 1e-4
+    value = 1e-5
   []
   [ezz]
     type = FullScalar
     batch_shape = '(${nb})'
-    value = 1e-4
+    value = 1e-5
   []
   [max_strain]
     type = FillSR2
@@ -109,7 +109,8 @@ nt = 100 # time steps
     prescribed_grain_sizes = 'grain_sizes'
     prescribed_stoichiometries = 'stoichiometries'
     verbose = true
-  []
+    predictor = 'LINEAR_EXTRAPOLATION'
+ []
   # [driver]
   #   type = SolidMechanicsDriver
   #   model = 'model'
@@ -145,6 +146,7 @@ nt = 100 # time steps
   []
   [flow_direction]
     type = J2FlowDirection
+    flow_direction = 'forces/NM'
   []
   [trial_state]
     type = ComposedModel

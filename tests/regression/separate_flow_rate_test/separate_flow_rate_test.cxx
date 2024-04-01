@@ -19,9 +19,11 @@
 // THE SOFTWARE.
 
 #include <catch2/catch.hpp>
+#include <fstream>
 
 #include "utils.h"
 #include "neml2/models/Model.h"
+#include "neml2/models/ComposedModel.h"
 
 using namespace neml2;
 
@@ -29,6 +31,15 @@ TEST_CASE("Separate test for Daniel's flow rate")
 {
   load_model("regression/for_daniel_new/model.i");
   auto & model = Factory::get_object<Model>("Models", "flow_rate");
+
+  auto to_dot = [](const std::string name)
+  {
+    std::ofstream out((name + ".dot").c_str());
+    auto & model0 = Factory::get_object<ComposedModel>("Models", name);
+    model0.to_dot(out);
+  };
+  to_dot("model0");
+  to_dot("implicit_rate");
 
   TorchSize nbatch = 10;
   auto in = LabeledVector::empty({nbatch}, {&model.input()});
