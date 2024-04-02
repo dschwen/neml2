@@ -32,55 +32,56 @@ TEST_CASE("Separate test for Daniel's flow rate")
   load_model("regression/for_daniel_new/model.i");
   auto & model = Factory::get_object<Model>("Models", "flow_rate");
 
-  auto to_dot = [](const std::string name)
-  {
-    std::ofstream out((name + ".dot").c_str());
-    auto & model0 = Factory::get_object<ComposedModel>("Models", name);
-    model0.to_dot(out);
-  };
-  to_dot("model0");
-  to_dot("implicit_rate");
+  // auto to_dot = [](const std::string name)
+  // {
+  //   std::ofstream out((name + ".dot").c_str());
+  //   auto & model0 = Factory::get_object<ComposedModel>("Models", name);
+  //   model0.to_dot(out);
+  // };
+  // to_dot("model0");
+  // to_dot("implicit_rate");
 
   TorchSize nbatch = 10;
-  auto in = LabeledVector::empty({nbatch}, {&model.input()});
+  auto in = LabeledVector::empty({nbatch}, {&model.input_axis()});
 
   // 'Temp (K)', 'Grain (m)', 'Stress (Pa)', 'Stoich'
   const double test[] = {2.200e+03, 5.5000e-05, 1.e+08, 0.01};
 
   // Specify trial stress
-  auto s_accessor = LabeledAxisAccessor({"state", "internal", "s"});
+  auto s_accessor = VariableName("state", "internal", "s");
   auto s_min = Scalar::full(0.0);
   auto s_max = Scalar::full(test[2]);
   auto s = Scalar::linspace(s_min, s_max, nbatch);
   in.set(s, s_accessor);
 
   // Specify temperature {};
-  auto T_accessor = LabeledAxisAccessor({"forces", std::string("T")});
+  auto T_accessor = VariableName("forces", std::string("T"));
   auto T_min = Scalar::full(test[0]);
   auto T_max = Scalar::full(test[0]);
   auto T = Scalar::linspace(T_min, T_max, nbatch);
   in.set(T, T_accessor);
 
   // Grain size
-  auto G_accessor = LabeledAxisAccessor({"forces", "grain_size"});
+  auto G_accessor = VariableName("forces", "grain_size");
   auto G_min = Scalar::full(test[1]);
   auto G_max = Scalar::full(test[1]);
   auto G = Scalar::linspace(G_min, G_max, nbatch);
   in.set(G, G_accessor);
 
   // stoichiometry
-  auto ST_accessor = LabeledAxisAccessor({"forces", "stoichiometry"});
+  auto ST_accessor = VariableName("forces", "stoichiometry");
   auto ST_min = Scalar::full(test[3]);
   auto ST_max = Scalar::full(test[3]);
   auto ST = Scalar::linspace(ST_min, ST_max, nbatch);
   in.set(ST, ST_accessor);
 
   // See what parameters the model has
-  for (auto && [name, param] : model.named_parameters(/*recurse=*/true))
-    std::cout << name << ": " << param.sizes() << std::endl;
+  for (auto && [name, param] : model.named_parameters())
+    std::cout << name << ": " << BatchTensor(param).base_sizes() << " , "
+              << BatchTensor(param).batch_sizes() << std::endl;
 
-  // print_general(model.input(), "input variables");
-  // print_general(model.output(), "output variables");
+  // print_general(model.input_axis(), "input variables");
+  // print_general(model.output_axis(), "output variables");
 
   // compute
   auto out = model.value(in);

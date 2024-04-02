@@ -38,23 +38,22 @@ public:
 
   DanielFlowRate(const OptionSet & options);
 
-  const LabeledAxisAccessor trial_effective_stress;
-  const LabeledAxisAccessor flow_rate;
+  // input variables
+  // const VariableName dt;
+  const Variable<Scalar> & _temperature;
+  const Variable<Scalar> & _grain_size;
+  const Variable<Scalar> & _stoichiometry;
+  // const VariableName fission_rate;
+  const Variable<Scalar> & _trial_effective_stress;
 
-  // const LabeledAxisAccessor dt;
-  const LabeledAxisAccessor temperature;
-  const LabeledAxisAccessor grain_size;
-  const LabeledAxisAccessor stoichiometry;
-  // const LabeledAxisAccessor fission_rate;
+  // output variable
+  Variable<Scalar> & _flow_rate;
 
-  virtual void to(const torch::TensorOptions & options) override;
+  // virtual void to(const torch::TensorOptions & options) override;
 
 protected:
   /// The flow rate
-  virtual void set_value(const LabeledVector & in,
-                         LabeledVector * out,
-                         LabeledMatrix * dout_din = nullptr,
-                         LabeledTensor3D * d2out_din2 = nullptr) const override;
+  virtual void set_value(bool out, bool dout_din, bool d2out_din2) override;
 
   /// we need to use a pointer here because forward is not const qualified, :eye_roll:
   std::unique_ptr<torch::jit::script::Module> _surrogate;
