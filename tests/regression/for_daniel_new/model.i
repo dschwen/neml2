@@ -199,6 +199,8 @@ nt = 100 # time steps
   []
   [implicit_rate]
     type = ComposedModel
+    use_AD_first_derivative = true
+    use_AD_second_derivative = true
     models = "trial_effective_stress flow_rate integrate_gamma"
   []
   [return_map]
