@@ -122,7 +122,7 @@ nt = 100 # time steps
 
 [Solvers]
   [newton]
-    type = NewtonNonlinearSolver
+    type = Newton
     verbose = true
   []
 []
@@ -205,7 +205,7 @@ nt = 100 # time steps
     type = ImplicitUpdate
     implicit_model = 'implicit_rate'
     solver = 'newton'
-    additional_outputs = 'state/internal/gamma'
+    #additional_outputs = 'state/internal/gamma'
   []
   [model0]
     type = ComposedModel
